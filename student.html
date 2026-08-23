@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UEMS — Student</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">UEMS</div>
+      <div class="sub">Student Portal</div>
+    </div>
+    <nav class="nav-group">
+      <button class="nav-btn active" data-view="browse" onclick="showView('browse')">Upcoming Events</button>
+      <button class="nav-btn" data-view="mine" onclick="showView('mine')">My Registrations</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="session-card"><strong id="sessionName">—</strong><span id="sessionSub">Student</span></div>
+      <button class="logout-btn" onclick="handleLogout()">Log out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ===================== BROWSE VIEW ===================== -->
+    <section class="view active" id="view-browse">
+      <div class="page-head">
+        <div>
+          <h1>Upcoming Events</h1>
+          <p>Browse what's happening on campus and register a seat.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>All Upcoming Events</h2>
+          <div class="toolbar">
+            <select class="select-input" id="browseCategoryFilter" onchange="renderBrowse()"></select>
+            <input class="search-input" id="browseSearch" placeholder="Search events…" oninput="renderBrowse()" />
+          </div>
+        </div>
+        <div id="browseGridWrap"></div>
+      </div>
+    </section>
+
+    <!-- ===================== MY REGISTRATIONS VIEW ===================== -->
+    <section class="view" id="view-mine">
+      <div class="page-head">
+        <div>
+          <h1>My Registrations</h1>
+          <p>Events you've signed up for.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div id="myRegsWrap"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Event details modal -->
+<div class="modal-backdrop" id="eventDetailsBackdrop">
+  <div class="modal" id="eventDetailsModal"></div>
+</div>
+
+<div id="toast"></div>
+
+<script src="db.js"></script>
+<script src="auth.js"></script>
+<script src="util.js"></script>
+<script src="student.js"></script>
+</body>
+</html>

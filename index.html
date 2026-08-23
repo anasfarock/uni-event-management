@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UEMS — Sign In</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="login-shell">
+  <div class="login-brand">
+    <div>
+      <div class="mark">UEMS</div>
+      <div class="tag-sub">University Event Management System</div>
+    </div>
+    <div class="headline">One place to run every event on campus — from proposal to registration.</div>
+    <div class="foot">SZABIST Institute of Science &amp; Technology · Computer Science Department</div>
+  </div>
+
+  <div class="login-form-side">
+    <div class="login-card">
+      <h1>Sign in</h1>
+      <p class="lede">Choose your role and enter your credentials to continue.</p>
+
+      <div class="role-toggle" role="tablist" aria-label="Login role">
+        <button type="button" id="roleAdminBtn" class="active" onclick="setRole('admin')">Admin</button>
+        <button type="button" id="roleStudentBtn" onclick="setRole('student')">Student</button>
+      </div>
+
+      <div class="error-msg" id="loginError"></div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn btn-gold" style="width:100%; justify-content:center; padding:11px;">Sign in</button>
+      </form>
+
+      <div class="hint-box" id="hintBox">
+        <b>Demo admin login</b> — username: <code>admin</code>, password: <code>admin123</code>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="db.js"></script>
+<script src="auth.js"></script>
+<script>
+  let currentRole = "admin";
+
+  function setRole(role) {
+    currentRole = role;
+    document.getElementById("roleAdminBtn").classList.toggle("active", role === "admin");
+    document.getElementById("roleStudentBtn").classList.toggle("active", role === "student");
+    document.getElementById("hintBox").innerHTML = role === "admin"
+      ? "<b>Demo admin login</b> — username: <code>admin</code>, password: <code>admin123</code>"
+      : "<b>Demo student logins</b> — <code>ayesha.khan</code> / <code>bilal.ahmed</code> / <code>sara.farooq</code>, password: <code>student123</code>";
+    document.getElementById("loginError").classList.remove("show");
+  }
+
+  function handleLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+    const errBox = document.getElementById("loginError");
+    try {
+      const session = Auth.login(username, password, currentRole);
+      window.location.href = session.role === "admin" ? "admin.html" : "student.html";
+    } catch (err) {
+      errBox.textContent = err.message;
+      errBox.classList.add("show");
+    }
+  }
+
+  // If already logged in, skip straight to the right dashboard.
+  (function redirectIfLoggedIn() {
+    const session = Auth.current();
+    if (session) {
+      window.location.href = session.role === "admin" ? "admin.html" : "student.html";
+    }
+  })();
+</script>
+</body>
+</html>

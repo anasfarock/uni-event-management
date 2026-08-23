@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UEMS — Admin</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">UEMS</div>
+      <div class="sub">Admin Console</div>
+    </div>
+    <nav class="nav-group">
+      <button class="nav-btn active" data-view="students" onclick="showView('students')">Manage Students</button>
+      <button class="nav-btn" data-view="events" onclick="showView('events')">Manage Events</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="session-card"><strong id="sessionName">—</strong>Administrator</div>
+      <button class="logout-btn" onclick="handleLogout()">Log out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ===================== STUDENTS VIEW ===================== -->
+    <section class="view active" id="view-students">
+      <div class="page-head">
+        <div>
+          <h1>Manage Students</h1>
+          <p>Add, update, and search student records.</p>
+        </div>
+        <button class="btn btn-gold" onclick="openStudentModal()">+ Add Student</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>All Students</h2>
+          <div class="toolbar">
+            <input class="search-input" id="studentSearch" placeholder="Search by name, roll no, email, department…" oninput="renderStudents()" />
+          </div>
+        </div>
+        <div id="studentsTableWrap"></div>
+      </div>
+    </section>
+
+    <!-- ===================== EVENTS VIEW ===================== -->
+    <section class="view" id="view-events">
+      <div class="page-head">
+        <div>
+          <h1>Manage Events</h1>
+          <p>Create, update, and search campus events.</p>
+        </div>
+        <button class="btn btn-gold" onclick="openEventModal()">+ Add Event</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>All Events</h2>
+          <div class="toolbar">
+            <select class="select-input" id="eventCategoryFilter" onchange="renderEvents()"></select>
+            <input class="search-input" id="eventSearch" placeholder="Search by title, venue, category…" oninput="renderEvents()" />
+          </div>
+        </div>
+        <div id="eventsTableWrap"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Student modal -->
+<div class="modal-backdrop" id="studentModalBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="studentModalTitle">Add Student</h2>
+      <button class="modal-close" onclick="closeStudentModal()">&times;</button>
+    </div>
+    <form id="studentForm" onsubmit="submitStudentForm(event)">
+      <input type="hidden" id="studentEditingId" />
+      <div class="form-grid">
+        <div class="field">
+          <label for="sf-studentId">Student ID</label>
+          <input id="sf-studentId" required placeholder="e.g. STU-1010" />
+        </div>
+        <div class="field">
+          <label for="sf-rollNumber">Roll Number</label>
+          <input id="sf-rollNumber" required placeholder="e.g. BSSE-090" />
+        </div>
+        <div class="field span-2">
+          <label for="sf-name">Full Name</label>
+          <input id="sf-name" required />
+        </div>
+        <div class="field span-2">
+          <label for="sf-email">Email</label>
+          <input id="sf-email" type="email" required />
+        </div>
+        <div class="field">
+          <label for="sf-department">Department</label>
+          <input id="sf-department" required placeholder="e.g. Computer Science" />
+        </div>
+        <div class="field">
+          <label for="sf-semester">Semester</label>
+          <input id="sf-semester" type="number" min="1" max="12" required />
+        </div>
+      </div>
+
+      <div id="loginFieldsGroup">
+        <div class="form-grid">
+          <div class="field">
+            <label for="sf-username">Login Username</label>
+            <input id="sf-username" placeholder="for student's account" />
+          </div>
+          <div class="field">
+            <label for="sf-password">Login Password</label>
+            <input id="sf-password" placeholder="for student's account" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeStudentModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Student</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Event modal -->
+<div class="modal-backdrop" id="eventModalBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="eventModalTitle">Add Event</h2>
+      <button class="modal-close" onclick="closeEventModal()">&times;</button>
+    </div>
+    <form id="eventForm" onsubmit="submitEventForm(event)">
+      <input type="hidden" id="eventEditingId" />
+      <div class="form-grid">
+        <div class="field span-2">
+          <label for="ef-title">Event Title</label>
+          <input id="ef-title" required />
+        </div>
+        <div class="field span-2">
+          <label for="ef-description">Description</label>
+          <textarea id="ef-description" required></textarea>
+        </div>
+        <div class="field">
+          <label for="ef-category">Category</label>
+          <input id="ef-category" required placeholder="e.g. Technology, Sports, Cultural" />
+        </div>
+        <div class="field">
+          <label for="ef-venue">Venue</label>
+          <input id="ef-venue" required />
+        </div>
+        <div class="field">
+          <label for="ef-date">Date</label>
+          <input id="ef-date" type="date" required />
+        </div>
+        <div class="field">
+          <label for="ef-maxParticipants">Max Participants</label>
+          <input id="ef-maxParticipants" type="number" min="1" required />
+        </div>
+        <div class="field">
+          <label for="ef-startTime">Start Time</label>
+          <input id="ef-startTime" type="time" required />
+        </div>
+        <div class="field">
+          <label for="ef-endTime">End Time</label>
+          <input id="ef-endTime" type="time" required />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeEventModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Event</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="db.js"></script>
+<script src="auth.js"></script>
+<script src="util.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>
