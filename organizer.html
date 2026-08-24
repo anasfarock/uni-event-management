@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>UEMS — Organizer</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">UEMS</div>
+      <div class="sub">Organizer Console</div>
+    </div>
+    <nav class="nav-group">
+      <button class="nav-btn active" data-view="myEvents" onclick="showView('myEvents')">My Events</button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="notif-bell-wrap" id="notifBellWrap">
+        <button class="notif-bell" onclick="toggleNotifPanel()">
+          <span>🔔 Notifications</span>
+          <span class="notif-badge" id="notifBadge"></span>
+        </button>
+        <div class="notif-panel" id="notifPanel"></div>
+      </div>
+      <div class="session-card"><strong id="sessionName">—</strong><span id="sessionSub">Organizer</span></div>
+      <button class="logout-btn" onclick="handleLogout()">Log out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <section class="view active" id="view-myEvents">
+      <div class="page-head">
+        <div><h1>My Events</h1><p>Create events, track approval, and manage attendance once they run.</p></div>
+        <button class="btn btn-gold" onclick="openEventModal()">+ Create Event</button>
+      </div>
+      <div class="panel">
+        <div id="myEventsWrap"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Create/Edit event modal -->
+<div class="modal-backdrop" id="eventModalBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="eventModalTitle">Create Event</h2>
+      <button class="modal-close" onclick="closeEventModal()">&times;</button>
+    </div>
+    <form id="eventForm" onsubmit="submitEventForm(event)">
+      <input type="hidden" id="eventEditingId" />
+      <div class="form-grid">
+        <div class="field span-2"><label for="ef-title">Event Title</label><input id="ef-title" required /></div>
+        <div class="field span-2"><label for="ef-description">Description</label><textarea id="ef-description" required></textarea></div>
+        <div class="field"><label for="ef-category">Category</label><input id="ef-category" required placeholder="e.g. Technology, Sports, Cultural" /></div>
+        <div class="field"><label for="ef-venue">Venue</label><input id="ef-venue" required /></div>
+        <div class="field"><label for="ef-date">Date</label><input id="ef-date" type="date" required /></div>
+        <div class="field"><label for="ef-maxParticipants">Max Participants</label><input id="ef-maxParticipants" type="number" min="1" required /></div>
+        <div class="field"><label for="ef-startTime">Start Time</label><input id="ef-startTime" type="time" required /></div>
+        <div class="field"><label for="ef-endTime">End Time</label><input id="ef-endTime" type="time" required /></div>
+      </div>
+      <p style="font-size:12.5px;color:var(--slate-soft);margin:0 0 10px;" id="approvalHint">New events are submitted to the admin for approval before students can see them.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeEventModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Event</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Event detail / participants / attendance modal -->
+<div class="modal-backdrop" id="detailModalBackdrop">
+  <div class="modal" style="max-width:720px;">
+    <div class="modal-head">
+      <h2 id="detailModalTitle">Event</h2>
+      <button class="modal-close" onclick="closeDetailModal()">&times;</button>
+    </div>
+    <div id="detailModalBody"></div>
+  </div>
+</div>
+
+<!-- QR modal -->
+<div class="modal-backdrop" id="qrModalBackdrop">
+  <div class="modal">
+    <div class="modal-head"><h2>Registration QR Code</h2><button class="modal-close" onclick="closeQrModal()">&times;</button></div>
+    <div class="qr-box">
+      <div id="qrCodeContainer"></div>
+      <p style="font-size:13px;color:var(--slate-soft);text-align:center;margin:0;">Students scan this to open the event and register directly.</p>
+      <div class="qr-link" id="qrLinkText"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="qrcode.min.js"></script>
+<script src="db.js"></script>
+<script src="auth.js"></script>
+<script src="util.js"></script>
+<script src="qr.js"></script>
+<script src="notifications.js"></script>
+<script src="organizer.js"></script>
+</body>
+</html>

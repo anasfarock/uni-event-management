@@ -30,6 +30,9 @@ const Auth = {
   requireRole(role) {
     const session = this.current();
     if (!session || session.role !== role) {
+      // Remember where the person was headed (e.g. a QR deep link to a
+      // specific event) so login can send them straight back after.
+      sessionStorage.setItem("uems_redirect_after_login", window.location.pathname + window.location.search);
       window.location.href = "index.html";
       return null;
     }

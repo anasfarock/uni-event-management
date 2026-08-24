@@ -13,11 +13,20 @@ function showView(view) {
   document.querySelectorAll(".nav-btn").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
   if (view === "browse") renderBrowse();
   if (view === "mine") renderMyRegistrations();
+  if (view === "certificates") renderCertificates();
 }
 
 function handleLogout() {
   Auth.logout();
   window.location.href = "index.html";
+}
+
+/* ================= NOTIFICATIONS ================= */
+function refreshNotifications() {
+  renderNotifPanel(DB.getNotificationsForStudent(currentStudent.studentId), () => {
+    DB.markAllRead(DB.getNotificationsForStudent(currentStudent.studentId));
+    refreshNotifications();
+  });
 }
 
 /* ---------------- seat meter (signature visual) ---------------- */
@@ -33,18 +42,17 @@ function seatMeter(taken, max) {
   return `<div class="seat-meter"><div class="seat-dots">${dots}</div><span class="seat-count">${taken}/${max} seats</span></div>`;
 }
 
-/* ---------------- BROWSE ---------------- */
-
+/* ---------------- BROWSE (approved events only) ---------------- */
 function populateBrowseCategoryFilter() {
   const sel = document.getElementById("browseCategoryFilter");
-  sel.innerHTML = DB.categories().map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  sel.innerHTML = DB.categories(true).map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
 }
 
 function renderBrowse() {
   const query = document.getElementById("browseSearch").value;
   const category = document.getElementById("browseCategoryFilter").value;
   const today = new Date().toISOString().slice(0, 10);
-  const events = DB.searchEvents(query, category)
+  const events = DB.searchEvents(query, category, "approved")
     .filter((e) => e.date >= today)
     .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
 
@@ -69,9 +77,7 @@ function renderBrowse() {
           <span><b>Time</b>${formatTimeRange(e.startTime, e.endTime)}</span>
           <span><b>Venue</b>${escapeHtml(e.venue)}</span>
         </div>
-        <div class="card-foot">
-          ${seatMeter(taken, e.maxParticipants)}
-        </div>
+        <div class="card-foot">${seatMeter(taken, e.maxParticipants)}</div>
         <div class="card-foot">
           <button class="btn btn-ghost btn-sm" onclick="openEventDetails('${e.eventId}')">Details</button>
           ${isRegistered
@@ -86,7 +92,10 @@ function renderBrowse() {
 
 function openEventDetails(eventId) {
   const e = DB.getEvent(eventId);
-  if (!e) return;
+  if (!e || e.status !== "approved") {
+    toast("This event isn't available.", "error");
+    return;
+  }
   const taken = DB.seatsTaken(eventId);
   const isRegistered = DB.isRegistered(currentStudent.studentId, eventId);
   const isFull = taken >= e.maxParticipants;
@@ -114,16 +123,14 @@ function openEventDetails(eventId) {
   `;
   document.getElementById("eventDetailsBackdrop").classList.add("open");
 }
-
-function closeEventDetails() {
-  document.getElementById("eventDetailsBackdrop").classList.remove("open");
-}
+function closeEventDetails() { document.getElementById("eventDetailsBackdrop").classList.remove("open"); }
 
 function registerForEvent(eventId) {
   try {
     DB.register(currentStudent.studentId, eventId);
     toast("You're registered!", "success");
     renderBrowse();
+    refreshNotifications();
   } catch (err) {
     toast(err.message, "error");
   }
@@ -139,17 +146,13 @@ function cancelRegistration(eventId) {
 }
 
 /* ---------------- MY REGISTRATIONS ---------------- */
-
 function renderMyRegistrations() {
-  const regs = DB.getRegistrationsForStudent(currentStudent.studentId)
-    .sort((a, b) => (a.event.date + a.event.startTime).localeCompare(b.event.date + b.event.startTime));
+  const regs = DB.getRegistrationsForStudent(currentStudent.studentId).sort((a, b) => (a.event.date + a.event.startTime).localeCompare(b.event.date + b.event.startTime));
   const wrap = document.getElementById("myRegsWrap");
-
   if (regs.length === 0) {
     wrap.innerHTML = `<div class="empty-state"><div class="display">No registrations yet</div>Browse upcoming events and register for one.</div>`;
     return;
   }
-
   wrap.innerHTML = `
     <table>
       <thead><tr><th>Event</th><th>Category</th><th>Date</th><th>Time</th><th>Venue</th><th></th></tr></thead>
@@ -169,7 +172,61 @@ function renderMyRegistrations() {
   `;
 }
 
+/* ---------------- CERTIFICATES ---------------- */
+let certModalCurrentCert = null;
+
+function renderCertificates() {
+  const certs = DB.getCertificatesForStudent(currentStudent.studentId).sort((a, b) => b.issueDate.localeCompare(a.issueDate));
+  const wrap = document.getElementById("certificatesWrap");
+  if (certs.length === 0) {
+    wrap.innerHTML = `<div class="empty-state"><div class="display">No certificates yet</div>Attend an event and get marked present to earn one.</div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <table>
+      <thead><tr><th>Certificate No.</th><th>Event</th><th>Issue Date</th><th></th></tr></thead>
+      <tbody>
+        ${certs.map((c) => `
+          <tr>
+            <td class="id-tag">${escapeHtml(c.certificateNumber)}</td>
+            <td><strong>${escapeHtml(c.event.title)}</strong></td>
+            <td>${formatDate(c.issueDate)}</td>
+            <td><div class="row-actions"><button class="btn btn-gold btn-sm" onclick="openCertModal('${c.id}')">View / Download</button></div></td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+function openCertModal(certId) {
+  const cert = DB.getCertificate(certId);
+  if (!cert) return;
+  certModalCurrentCert = cert;
+  const canvas = document.getElementById("certCanvas");
+  drawCertificate(canvas, cert);
+  document.getElementById("certDownloadBtn").onclick = () => downloadCertificatePng(cert);
+  document.getElementById("certModalBackdrop").classList.add("open");
+}
+function closeCertModal() { document.getElementById("certModalBackdrop").classList.remove("open"); }
+
+/* ---------------- QR deep-link handling ---------------- */
+function handleDeepLink() {
+  const params = new URLSearchParams(window.location.search);
+  const eventId = params.get("event");
+  if (eventId) {
+    openEventDetails(eventId);
+    // Clean the URL so refreshing doesn't reopen the modal.
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+  }
+}
+
 /* ---------------- init ---------------- */
 populateBrowseCategoryFilter();
 renderBrowse();
 renderMyRegistrations();
+renderCertificates();
+DB.autoGenerateReminders(currentStudent.studentId);
+refreshNotifications();
+handleDeepLink();

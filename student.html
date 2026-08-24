@@ -17,8 +17,16 @@
     <nav class="nav-group">
       <button class="nav-btn active" data-view="browse" onclick="showView('browse')">Upcoming Events</button>
       <button class="nav-btn" data-view="mine" onclick="showView('mine')">My Registrations</button>
+      <button class="nav-btn" data-view="certificates" onclick="showView('certificates')">My Certificates</button>
     </nav>
     <div class="sidebar-footer">
+      <div class="notif-bell-wrap" id="notifBellWrap">
+        <button class="notif-bell" onclick="toggleNotifPanel()">
+          <span>🔔 Notifications</span>
+          <span class="notif-badge" id="notifBadge"></span>
+        </button>
+        <div class="notif-panel" id="notifPanel"></div>
+      </div>
       <div class="session-card"><strong id="sessionName">—</strong><span id="sessionSub">Student</span></div>
       <button class="logout-btn" onclick="handleLogout()">Log out</button>
     </div>
@@ -29,12 +37,8 @@
     <!-- ===================== BROWSE VIEW ===================== -->
     <section class="view active" id="view-browse">
       <div class="page-head">
-        <div>
-          <h1>Upcoming Events</h1>
-          <p>Browse what's happening on campus and register a seat.</p>
-        </div>
+        <div><h1>Upcoming Events</h1><p>Browse what's happening on campus and register a seat.</p></div>
       </div>
-
       <div class="panel">
         <div class="panel-head">
           <h2>All Upcoming Events</h2>
@@ -50,15 +54,17 @@
     <!-- ===================== MY REGISTRATIONS VIEW ===================== -->
     <section class="view" id="view-mine">
       <div class="page-head">
-        <div>
-          <h1>My Registrations</h1>
-          <p>Events you've signed up for.</p>
-        </div>
+        <div><h1>My Registrations</h1><p>Events you've signed up for.</p></div>
       </div>
+      <div class="panel"><div id="myRegsWrap"></div></div>
+    </section>
 
-      <div class="panel">
-        <div id="myRegsWrap"></div>
+    <!-- ===================== CERTIFICATES VIEW ===================== -->
+    <section class="view" id="view-certificates">
+      <div class="page-head">
+        <div><h1>My Certificates</h1><p>Available once you've been marked present at an event.</p></div>
       </div>
+      <div class="panel"><div id="certificatesWrap"></div></div>
     </section>
 
   </main>
@@ -69,11 +75,27 @@
   <div class="modal" id="eventDetailsModal"></div>
 </div>
 
+<!-- Certificate preview modal -->
+<div class="modal-backdrop" id="certModalBackdrop">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-head"><h2>Certificate of Participation</h2><button class="modal-close" onclick="closeCertModal()">&times;</button></div>
+    <div class="cert-canvas-wrap"><canvas id="certCanvas" width="900" height="620"></canvas></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeCertModal()">Close</button>
+      <button class="btn btn-gold" id="certDownloadBtn">Download PNG</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
+<script src="qrcode.min.js"></script>
 <script src="db.js"></script>
 <script src="auth.js"></script>
 <script src="util.js"></script>
+<script src="qr.js"></script>
+<script src="notifications.js"></script>
+<script src="certificate.js"></script>
 <script src="student.js"></script>
 </body>
 </html>

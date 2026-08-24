@@ -25,6 +25,7 @@
 
       <div class="role-toggle" role="tablist" aria-label="Login role">
         <button type="button" id="roleAdminBtn" class="active" onclick="setRole('admin')">Admin</button>
+        <button type="button" id="roleOrganizerBtn" onclick="setRole('organizer')">Organizer</button>
         <button type="button" id="roleStudentBtn" onclick="setRole('student')">Student</button>
       </div>
 
@@ -56,13 +57,18 @@
 <script>
   let currentRole = "admin";
 
+  const HINTS = {
+    admin: "<b>Demo admin login</b> — username: <code>admin</code>, password: <code>admin123</code>",
+    organizer: "<b>Demo organizer logins</b> — <code>hassan.raza</code> / <code>mehreen.ali</code>, password: <code>organizer123</code>",
+    student: "<b>Demo student logins</b> — <code>ayesha.khan</code> / <code>bilal.ahmed</code> / <code>sara.farooq</code>, password: <code>student123</code>",
+  };
+
   function setRole(role) {
     currentRole = role;
     document.getElementById("roleAdminBtn").classList.toggle("active", role === "admin");
+    document.getElementById("roleOrganizerBtn").classList.toggle("active", role === "organizer");
     document.getElementById("roleStudentBtn").classList.toggle("active", role === "student");
-    document.getElementById("hintBox").innerHTML = role === "admin"
-      ? "<b>Demo admin login</b> — username: <code>admin</code>, password: <code>admin123</code>"
-      : "<b>Demo student logins</b> — <code>ayesha.khan</code> / <code>bilal.ahmed</code> / <code>sara.farooq</code>, password: <code>student123</code>";
+    document.getElementById("hintBox").innerHTML = HINTS[role];
     document.getElementById("loginError").classList.remove("show");
   }
 
@@ -73,7 +79,13 @@
     const errBox = document.getElementById("loginError");
     try {
       const session = Auth.login(username, password, currentRole);
-      window.location.href = session.role === "admin" ? "admin.html" : "student.html";
+      const redirect = sessionStorage.getItem("uems_redirect_after_login");
+      sessionStorage.removeItem("uems_redirect_after_login");
+      const defaultPage = { admin: "admin.html", organizer: "organizer.html", student: "student.html" }[session.role];
+      // Only honor the saved redirect if it points at this role's own page
+      // (e.g. a QR deep link to student.html?event=... for a student login).
+      const redirectFile = redirect ? redirect.substring(redirect.lastIndexOf("/") + 1) : "";
+      window.location.href = redirectFile.startsWith(defaultPage) ? redirectFile : defaultPage;
     } catch (err) {
       errBox.textContent = err.message;
       errBox.classList.add("show");
@@ -84,7 +96,7 @@
   (function redirectIfLoggedIn() {
     const session = Auth.current();
     if (session) {
-      window.location.href = session.role === "admin" ? "admin.html" : "student.html";
+      window.location.href = { admin: "admin.html", organizer: "organizer.html", student: "student.html" }[session.role];
     }
   })();
 </script>
